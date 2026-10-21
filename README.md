@@ -22,16 +22,16 @@ L'objectif est de détecter des problèmes de sécurité dans le code source, de
 
 ## 2. Environnement et outils
 
-| Outil | Utilisation |
-|---|---|
-| Git et GitHub | Gestion du code source |
-| GitHub Actions | Automatisation du pipeline CI |
-| Java 25 et Maven Wrapper | Compilation et tests |
-| SonarQube Community | Analyse de la qualité et de la sécurité du code |
-| Semgrep | Analyse SAST basée sur des règles |
-| Docker | Exécution locale du serveur SonarQube |
-| Windows Self-hosted Runner | Exécution du build et de SonarQube |
-| Ubuntu GitHub-hosted Runner | Exécution de Semgrep |
+|            Outil            |                   Utilisation                   |
+|-----------------------------|-------------------------------------------------|
+| Git et GitHub               | Gestion du code source                          |
+| GitHub Actions              | Automatisation du pipeline CI                   |
+| Java 25 et Maven Wrapper    | Compilation et tests                            |
+| SonarQube Community         | Analyse de la qualité et de la sécurité du code |
+| Semgrep                     | Analyse SAST basée sur des règles               |
+| Docker                      | Exécution locale du serveur SonarQube           |
+| Windows Self-hosted Runner  | Exécution du build et de SonarQube              |
+| Ubuntu GitHub-hosted Runner | Exécution de Semgrep                            |
 
 ## 3. Pipeline CI avec GitHub Actions
 
@@ -65,15 +65,15 @@ Ce job s'exécute sur un runner Ubuntu fourni par GitHub.
 
 L'analyse du projet avec SonarQube a produit les résultats suivants :
 
-| Indicateur | Résultat |
-|---|---:|
-| Lignes de code | Environ 17 000 |
-| Security Issues | 92 |
-| Reliability Issues | 47 |
-| Maintainability Issues | 15 |
-| Open Issues | 141 |
-| Security Issues Closed | 2 |
-| Quality Gate | Passed |
+|       Indicateur       |       Résultat |
+|------------------------|---------------:|
+| Lignes de code         | Environ 17 000 |
+| Security Issues        |             92 |
+| Reliability Issues     |             47 |
+| Maintainability Issues |             15 |
+| Open Issues            |            141 |
+| Security Issues Closed |              2 |
+| Quality Gate           |         Passed |
 
 ![Tableau de bord SonarQube](screenshots/sonarqube-overview.png)
 
@@ -101,11 +101,11 @@ semgrep scan --config p/security-audit --config p/java .
 
 **Résultats après modification du code :**
 
-| Indicateur | Résultat |
-|---|---:|
-| Fichiers analysés | 1 134 |
-| Règles exécutées | 117 |
-| Findings détectés | 43 |
+|     Indicateur      |               Résultat |
+|---------------------|-----------------------:|
+| Fichiers analysés   |                  1 134 |
+| Règles exécutées    |                    117 |
+| Findings détectés   |                     43 |
 | Statut de l'analyse | Completed successfully |
 
 Les résultats détaillés ont également été générés au format JSON et conservés comme artifact dans GitHub Actions.
@@ -160,10 +160,10 @@ Nous avons réussi à :
 - Valider l'exécution du pipeline CI sur GitHub.
 
 ---
+
 ### Remarque
 
 Les captures d'écran illustrant les différentes étapes du workshop (GitHub Actions, SonarQube, Semgrep et corrections apportées) sont disponibles dans le dossier **[`WebGoat\screenshots`](screenshots/)** à la racine du dépôt GitHub.
-
 
 **Référence du projet original :** https://github.com/WebGoat/WebGoat
 
