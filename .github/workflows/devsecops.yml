@@ -3,7 +3,7 @@ name: DevSecOps CI
 
 on:
   push:
-    branches: [devsecops-workshop]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
