@@ -1,171 +1,170 @@
-# WebGoat: A deliberately insecure Web Application
+# Workshop 2 — Analyse SAST avec SonarQube et Semgrep
 
-[![Build](https://github.com/WebGoat/WebGoat/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/WebGoat/WebGoat/actions/workflows/build.yml)
-[![java-jdk](https://img.shields.io/badge/java%20jdk-25-green.svg)](https://jdk.java.net/)
-[![OWASP Labs](https://img.shields.io/badge/OWASP-Lab%20project-f7b73c.svg)](https://owasp.org/projects/)
-[![GitHub release](https://img.shields.io/github/release/WebGoat/WebGoat.svg)](https://github.com/WebGoat/WebGoat/releases/latest)
-[![Gitter](https://badges.gitter.im/OWASPWebGoat/community.svg)](https://gitter.im/OWASPWebGoat/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
-[![Discussions](https://img.shields.io/github/discussions/WebGoat/WebGoat)](https://github.com/WebGoat/WebGoat/discussions)
-[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
+**Module :** DevSecOps  
+**Groupe :** 9  
+**Membres :**
+- Abdelouahab Es-Samadi
+- Hatim Edderchoune
+- Mouad Jmmali
 
-# Introduction
+**Projet analysé :** OWASP WebGoat  
+**Dépôt GitHub :** https://github.com/DumpEyes/workshop2-9
 
-WebGoat is a deliberately insecure web application maintained by [OWASP](http://www.owasp.org/) designed to teach web
-application security lessons.
+---
 
-This program is a demonstration of common server-side application flaws. The
-exercises are intended to be used by people to learn about application security and
-penetration testing techniques.
+## 1. Introduction
 
-**WARNING 1:** *While running this program your machine will be extremely
-vulnerable to attack. You should disconnect from the Internet while using
-this program.*  WebGoat's default configuration binds to localhost to minimize
-the exposure.
+Ce workshop a pour objectif d'intégrer l'analyse statique de sécurité (SAST — Static Application Security Testing) dans un pipeline CI à l'aide de **SonarQube**, **Semgrep** et **GitHub Actions**.
 
-**WARNING 2:** *This program is for educational purposes only. If you attempt
-these techniques without authorization, you are very likely to get caught. If
-you are caught engaging in unauthorized hacking, most companies will fire you.
-Claiming that you were doing security research will not work as that is the
-first thing that all hackers claim.*
+Nous avons choisi **OWASP WebGoat**, une application Java basée sur Spring Boot et Maven, volontairement vulnérable et conçue à des fins pédagogiques.
 
-![WebGoat](docs/images/webgoat.png)
+L'objectif est de détecter des problèmes de sécurité dans le code source, de corriger un exemple de problème identifié et d'automatiser les analyses.
 
-# Installation instructions:
+## 2. Environnement et outils
 
-For more details check [the Contribution guide](/CONTRIBUTING.md)
+| Outil | Utilisation |
+|---|---|
+| Git et GitHub | Gestion du code source |
+| GitHub Actions | Automatisation du pipeline CI |
+| Java 25 et Maven Wrapper | Compilation et tests |
+| SonarQube Community | Analyse de la qualité et de la sécurité du code |
+| Semgrep | Analyse SAST basée sur des règles |
+| Docker | Exécution locale du serveur SonarQube |
+| Windows Self-hosted Runner | Exécution du build et de SonarQube |
+| Ubuntu GitHub-hosted Runner | Exécution de Semgrep |
 
-## 1. Run using Docker
+## 3. Pipeline CI avec GitHub Actions
 
-Already have a browser and ZAP and/or Burp installed on your machine in this case you can run the WebGoat image directly using Docker.
+Le workflow est défini dans le fichier `.github/workflows/devsecops.yml`.
 
-Every release is also published on [DockerHub](https://hub.docker.com/r/webgoat/webgoat).
+Il contient deux jobs :
 
-```shell
-docker run -it -p 127.0.0.1:8080:8080 -p 127.0.0.1:9090:9090 webgoat/webgoat
+**Job 1 — Build et SonarQube**
+
+1. Récupération du code source.
+2. Configuration de Java 25.
+3. Compilation et tests avec Maven Wrapper (`clean verify`).
+4. Analyse du code avec SonarQube.
+
+Ce job s'exécute sur un runner Windows auto-hébergé. Le serveur SonarQube est exécuté localement avec Docker.
+
+**Job 2 — Semgrep SAST**
+
+1. Récupération du code source.
+2. Installation de Python et Semgrep.
+3. Analyse du projet avec les configurations `p/security-audit` et `p/java`.
+4. Génération et archivage des résultats au format JSON.
+
+Ce job s'exécute sur un runner Ubuntu fourni par GitHub.
+
+**Résultat :** les deux jobs se sont terminés avec succès en 8 minutes et 41 secondes.
+
+![Exécution réussie du pipeline GitHub Actions](screenshots/github-actions.png)
+
+## 4. Résultats de SonarQube
+
+L'analyse du projet avec SonarQube a produit les résultats suivants :
+
+| Indicateur | Résultat |
+|---|---:|
+| Lignes de code | Environ 17 000 |
+| Security Issues | 92 |
+| Reliability Issues | 47 |
+| Maintainability Issues | 15 |
+| Open Issues | 141 |
+| Security Issues Closed | 2 |
+| Quality Gate | Passed |
+
+![Tableau de bord SonarQube](screenshots/sonarqube-overview.png)
+
+![Résultats de sécurité SonarQube](screenshots/sonarqube-security.png)
+
+### Exemple de vulnérabilité détectée
+
+SonarQube a identifié un problème de sécurité dans `JWTRefreshEndpoint.java`, à la ligne 73.
+
+- **Catégorie :** Security
+- **Sévérité :** Blocker
+- **Problème :** utilisation d'une valeur sensible codée en dur dans le code source.
+
+Cette pratique peut exposer des informations sensibles et doit être évitée dans une application de production.
+
+![Exemple de vulnérabilité SonarQube](screenshots/sonarqube-issue.png)
+
+## 5. Résultats de Semgrep
+
+L'analyse Semgrep a été exécutée avec les configurations suivantes :
+
+```bash
+semgrep scan --config p/security-audit --config p/java .
 ```
 
-For some lessons you need the container run in the same timezone. For this you can set the TZ environment variable.
-E.g.
+**Résultats après modification du code :**
 
-```shell
-docker run -it -p 127.0.0.1:8080:8080 -p 127.0.0.1:9090:9090 -e TZ=America/Boise webgoat/webgoat
+| Indicateur | Résultat |
+|---|---:|
+| Fichiers analysés | 1 134 |
+| Règles exécutées | 117 |
+| Findings détectés | 43 |
+| Statut de l'analyse | Completed successfully |
+
+Les résultats détaillés ont également été générés au format JSON et conservés comme artifact dans GitHub Actions.
+
+Les findings ont été rapportés sans faire échouer automatiquement le pipeline CI.
+
+![Résultats de Semgrep](screenshots/semgrep-results.png)
+
+## 6. Exemple de correction de sécurité
+
+Lors des analyses, un problème lié à l'absence de restriction explicite des méthodes HTTP a été identifié dans le fichier :
+
+`src/main/java/org/owasp/webgoat/container/service/LabelDebugService.java`
+
+Nous avons modifié les annotations `@RequestMapping` pour préciser les méthodes HTTP autorisées.
+
+**Lecture de l'état du débogage :**
+
+```java
+method = RequestMethod.GET
 ```
 
-If you want to use OWASP ZAP or another proxy, you can no longer use 127.0.0.1 or localhost. but
-you can use custom host entries. For example:
+**Modification de l'état du débogage :**
 
-```shell
-127.0.0.1 www.webgoat.local www.webwolf.local
+```java
+method = RequestMethod.POST
 ```
 
-Then you can run the container with:
+Cette modification permet de restreindre explicitement les méthodes HTTP acceptées par ces deux endpoints.
 
-```shell
-docker run -it -p 127.0.0.1:8080:8080 -p 127.0.0.1:9090:9090 -e WEBGOAT_HOST=www.webgoat.local -e WEBWOLF_HOST=www.webwolf.local -e TZ=America/Boise webgoat/webgoat
-```
+Après modification, une nouvelle analyse Semgrep du fichier concerné n'a retourné aucun finding avec les configurations utilisées. Une nouvelle analyse SonarQube a également montré la fermeture de deux problèmes de sécurité.
 
-Then visit http://www.webgoat.local:8080/WebGoat/ and http://www.webwolf.local:9090/WebWolf/
+Le nombre total de findings Semgrep du projet est passé de **45 à 43**.
 
-## 2. Run using Docker with complete Linux Desktop
+Cette correction ne garantit pas à elle seule la sécurité complète des endpoints ; d'autres mécanismes, comme l'autorisation et la protection CSRF, peuvent être nécessaires.
 
-Instead of installing tools locally we have a complete Docker image based on running a desktop in your browser. This way you only have to run a Docker image which will give you the best user experience.
+![Correction HTTP GET](screenshots/fix-get.png)
 
-```shell
-docker run -p 127.0.0.1:3000:3000 webgoat/webgoat-desktop
-```
+![Correction HTTP POST](screenshots/fix-post.png)
 
-## 3. Standalone
+## 7. Conclusion
 
-Download the latest WebGoat release from [https://github.com/WebGoat/WebGoat/releases](https://github.com/WebGoat/WebGoat/releases)
+Ce workshop nous a permis de mettre en pratique une démarche DevSecOps en intégrant deux outils SAST dans un pipeline GitHub Actions.
 
-```shell
-export TZ=Europe/Amsterdam # or your timezone
-java -Dfile.encoding=UTF-8 -jar webgoat-2023.8.jar
-```
+Nous avons réussi à :
 
-Click the link in the log to start WebGoat.
+- Compiler et tester le projet Java avec Maven.
+- Exécuter une analyse SonarQube automatisée.
+- Exécuter une analyse Semgrep automatisée.
+- Identifier plusieurs problèmes de sécurité.
+- Corriger un exemple de problème et relancer les analyses.
+- Valider l'exécution du pipeline CI sur GitHub.
 
-### 3.1 Running on a different port
+---
+### Remarque
 
-If for some reason you want to run WebGoat on a different port, you can do so by adding the following parameter:
+Les captures d'écran illustrant les différentes étapes du workshop (GitHub Actions, SonarQube, Semgrep et corrections apportées) sont disponibles dans le dossier **[`WebGoat\screenshots`](screenshots/)** à la racine du dépôt GitHub.
 
-```shell
-java -jar webgoat-2023.8.jar --webgoat.port=8001 --webwolf.port=8002
-```
 
-In the combined JAR, `--server.port` is an alias for `--webgoat.port`. Use `--webwolf.port` to set
-WebWolf's port separately.
+**Référence du projet original :** https://github.com/WebGoat/WebGoat
 
-For the available settings, see the [WebGoat properties](src/main/resources/application-webgoat.properties)
-and [WebWolf properties](src/main/resources/application-webwolf.properties).
-
-## 4. Run from the sources
-
-### Prerequisites:
-
-* Java 25
-* Your favorite IDE
-* Git, or Git support in your IDE
-
-Open a command shell/window:
-
-```Shell
-git clone git@github.com:WebGoat/WebGoat.git
-```
-
-Now let's start by compiling the project.
-
-```Shell
-cd WebGoat
-git checkout <<branch_name>>
-# On Linux/Mac:
-./mvnw clean install
-
-# On Windows:
-./mvnw.cmd clean install
-
-If you have ran WebGoat before, you should first run mvn clean -Pcleanall to clean up files from your temp and home directories which could fail the tests due to changes in lessons!
-
-# Using docker or podman, you can than build the container locally
-docker build -f Dockerfile . -t webgoat/webgoat
-```
-
-Now we are ready to run the project. WebGoat is using Spring Boot.
-
-```Shell
-# On Linux/Mac:
-./mvnw spring-boot:run
-# On Windows:
-./mvnw.cmd spring-boot:run
-
-```
-
-... you should be running WebGoat on http://localhost:8080/WebGoat momentarily.
-
-Note: The above link will redirect you to login page if you are not logged in. LogIn/Create account to proceed.
-
-To change the IP address add the following variable to the `WebGoat/webgoat-container/src/main/resources/application.properties` file:
-
-```
-server.address=x.x.x.x
-```
-
-## 4. Run with custom menu
-
-For specialist only. There is a way to set up WebGoat with a personalized menu. You can leave out some menu categories or individual lessons by setting certain environment variables.
-
-For instance running as a jar on a Linux/macOS it will look like this:
-
-```Shell
-export TZ=Europe/Amsterdam # or your timezone
-export EXCLUDE_CATEGORIES="CLIENT_SIDE,GENERAL,CHALLENGE"
-export EXCLUDE_LESSONS="SqlInjectionAdvanced,SqlInjectionMitigations"
-java -jar target/webgoat-2023.8-SNAPSHOT.jar
-```
-
-Or in a docker run it would (once this version is pushed into docker hub) look like this:
-
-```Shell
-docker run -d -p 127.0.0.1:8080:8080 -p 127.0.0.1:9090:9090 -e EXCLUDE_CATEGORIES="CLIENT_SIDE,GENERAL,CHALLENGE" -e EXCLUDE_LESSONS="SqlInjectionAdvanced,SqlInjectionMitigations" webgoat/webgoat
-```
-
+**** Workshop 2 — Groupe 9 — DevSecOps ***
